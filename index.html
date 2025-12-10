@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>QR Code Generator — Static</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>QR Code Generator</h1>
+
+    <label for="text">Enter text or URL</label>
+    <input id="text" type="text" placeholder="https://example.com" aria-label="Text or URL to encode" />
+
+    <div class="controls">
+      <label>
+        Size
+        <input id="size" type="number" min="64" max="1024" value="256" />
+      </label>
+
+      <label>
+        Foreground
+        <input id="fg" type="color" value="#000000" />
+      </label>
+
+      <label>
+        Background
+        <input id="bg" type="color" value="#ffffff" />
+      </label>
+
+      <button id="generate">Generate</button>
+    </div>
+
+    <section class="output" aria-live="polite">
+      <div id="qrcode-placeholder" class="qrbox">
+        <p class="muted">QR code will appear here</p>
+      </div>
+
+      <div class="actions">
+        <a id="download" class="btn" href="#" download="qrcode.png" style="display:none">Download PNG</a>
+        <button id="clear" class="btn secondary">Clear</button>
+      </div>
+    </section>
+
+    <section class="examples">
+      <h2>Examples</h2>
+      <ul>
+        <li><button class="example-btn" data-value="https://example.com">https://example.com</button></li>
+        <li><button class="example-btn" data-value="Hello, world!">Hello, world!</button></li>
+        <li><button class="example-btn" data-value="mailto:someone@example.com">mailto:someone@example.com</button></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>Static site — no server required. Uses QRious (CDN) to render a canvas and allow download.</p>
+    </footer>
+  </main>
+
+  <!-- QRious QR generator (CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"
+    integrity="sha512-3Gk2p1H7e2Ok8Vd8o7lE9qVfx6c8x6o3i+qgue1gVq3v/3j7m0u6Zq9m0bZDwq9vK0uQj1kQZ4wqFv1dR7v2Eg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="script.js"></script>
+</body>
+</html>
