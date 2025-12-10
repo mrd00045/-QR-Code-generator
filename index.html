@@ -57,10 +57,8 @@
     </footer>
   </main>
 
-  <!-- QRious QR generator (CDN) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"
-    integrity="sha512-3Gk2p1H7e2Ok8Vd8o7lE9qVfx6c8x6o3i+qgue1gVq3v/3j7m0u6Zq9m0bZDwq9vK0uQj1kQZ4wqFv1dR7v2Eg=="
-    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <!-- QRious QR generator (CDN) — no integrity attribute to avoid SRI blocking -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="script.js"></script>
 </body>
 </html>
