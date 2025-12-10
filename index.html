@@ -3,62 +3,167 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>QR Code Generator — Static</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>QR Code Generator</title>
+  <link rel="stylesheet" href="styles.css" />
+  <meta name="referrer" content="no-referrer" />
 </head>
 <body>
   <main class="container">
     <h1>QR Code Generator</h1>
 
-    <label for="text">Enter text or URL</label>
-    <input id="text" type="text" placeholder="https://example.com" aria-label="Text or URL to encode" />
+    <label for="textInput" class="label">Enter a URL or any text</label>
+    <textarea id="textInput" rows="2" placeholder="https://example.com or some text"></textarea>
 
     <div class="controls">
-      <label>
-        Size
-        <input id="size" type="number" min="64" max="1024" value="256" />
-      </label>
+      <label for="sizeRange" class="label">Size: <span id="sizeValue">256</span> px</label>
+      <input id="sizeRange" type="range" min="128" max="1024" value="256" />
 
-      <label>
-        Foreground
-        <input id="fg" type="color" value="#000000" />
-      </label>
-
-      <label>
-        Background
-        <input id="bg" type="color" value="#ffffff" />
-      </label>
-
-      <button id="generate">Generate</button>
+      <button id="generateBtn" class="btn">Generate QR</button>
+      <a id="downloadLink" class="btn btn-primary disabled" download="qrcode.png" href="#">Download PNG</a>
     </div>
 
-    <section class="output" aria-live="polite">
-      <div id="qrcode-placeholder" class="qrbox">
-        <p class="muted">QR code will appear here</p>
-      </div>
-
-      <div class="actions">
-        <a id="download" class="btn" href="#" download="qrcode.png" style="display:none">Download PNG</a>
-        <button id="clear" class="btn secondary">Clear</button>
-      </div>
+    <section class="preview">
+      <h2>Preview</h2>
+      <canvas id="qrCanvas" width="256" height="256" aria-label="Generated QR code"></canvas>
+      <p id="previewText" class="muted"></p>
     </section>
 
-    <section class="examples">
-      <h2>Examples</h2>
-      <ul>
-        <li><button class="example-btn" data-value="https://example.com">https://example.com</button></li>
-        <li><button class="example-btn" data-value="Hello, world!">Hello, world!</button></li>
-        <li><button class="example-btn" data-value="mailto:someone@example.com">mailto:someone@example.com</button></li>
-      </ul>
+    <section class="test">
+      <h2>Quick Test</h2>
+      <p>Try the sample URL: <button id="sampleBtn" class="btn small">https://example.com</button></p>
+      <div id="message" class="muted" role="status" aria-live="polite"></div>
     </section>
 
-    <footer>
-      <p>Static site — no server required. Uses QRious (CDN) to render a canvas and allow download.</p>
+    <footer class="foot">
+      <p>Static page — works offline once downloaded. Ready for GitHub Pages.</p>
     </footer>
   </main>
 
-  <!-- QRious QR generator (CDN) — no integrity attribute to avoid SRI blocking -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="script.js"></script>
+  <script>
+  // Run after DOM ready and ensure QRious is available (with a dynamic fallback)
+  document.addEventListener('DOMContentLoaded', async () => {
+    const textInput = document.getElementById('textInput');
+    const generateBtn = document.getElementById('generateBtn');
+    const downloadLink = document.getElementById('downloadLink');
+    const qrCanvas = document.getElementById('qrCanvas');
+    const sizeRange = document.getElementById('sizeRange');
+    const sizeValue = document.getElementById('sizeValue');
+    const previewText = document.getElementById('previewText');
+    const sampleBtn = document.getElementById('sampleBtn');
+    const message = document.getElementById('message');
+
+    function showMessage(msg, isError = false) {
+      message.textContent = msg;
+      message.style.color = isError ? '#b00020' : '';
+      console.log(msg);
+    }
+
+    // Ensure QRious is present. If not, try to load it dynamically from CDN.
+    async function ensureQRious() {
+      if (window.QRious) return;
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js';
+        s.onload = () => {
+          console.log('Loaded QRious from CDN');
+          resolve();
+        };
+        s.onerror = () => {
+          reject(new Error('Failed to load QRious from CDN.'));
+        };
+        document.head.appendChild(s);
+      });
+    }
+
+    try {
+      await ensureQRious();
+    } catch (err) {
+      showMessage('Could not load QR library. Check network or CDN blocking. See console for details.', true);
+      console.error(err);
+      return;
+    }
+
+    // Create QRious instance bound to the canvas
+    let qr = new QRious({
+      element: qrCanvas,
+      value: '',
+      size: Number(sizeRange.value) || 256,
+      level: 'H'
+    });
+
+    function updateDownloadLink() {
+      try {
+        const dataUrl = qr.toDataURL('image/png');
+        downloadLink.href = dataUrl;
+        downloadLink.download = 'qrcode.png';
+        downloadLink.classList.remove('disabled');
+      } catch (err) {
+        downloadLink.href = '#';
+        downloadLink.classList.add('disabled');
+        console.error('Error creating download href:', err);
+      }
+    }
+
+    function generate() {
+      const val = textInput.value.trim();
+      if (!val) {
+        alert('Please enter a URL or some text to encode.');
+        return;
+      }
+      const size = Number(sizeRange.value) || 256;
+      qr.size = size;
+      // set canvas attributes to match size (important for crisp rendering)
+      qrCanvas.width = size;
+      qrCanvas.height = size;
+      qr.value = val;
+
+      previewText.textContent = val;
+      updateDownloadLink();
+      showMessage('QR generated successfully.');
+    }
+
+    // Wire events
+    generateBtn.addEventListener('click', () => {
+      try {
+        generate();
+      } catch (e) {
+        console.error(e);
+        showMessage('Failed to generate QR. See console for details.', true);
+      }
+    });
+
+    sizeRange.addEventListener('input', () => {
+      sizeValue.textContent = sizeRange.value;
+      // adjust size live; if text exists, re-render
+      qr.size = Number(sizeRange.value);
+      qrCanvas.width = Number(sizeRange.value);
+      qrCanvas.height = Number(sizeRange.value);
+      if (textInput.value.trim()) {
+        qr.value = textInput.value.trim();
+        updateDownloadLink();
+      }
+    });
+
+    textInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) generate();
+    });
+
+    sampleBtn.addEventListener('click', () => {
+      textInput.value = 'https://example.com';
+      generate();
+    });
+
+    // Initialize with a sample value
+    textInput.value = 'https://example.com';
+    generate();
+
+    // Prevent navigation if download is disabled
+    downloadLink.addEventListener('click', (e) => {
+      if (downloadLink.classList.contains('disabled') || downloadLink.href === '#') {
+        e.preventDefault();
+      }
+    });
+  });
+  </script>
 </body>
 </html>
